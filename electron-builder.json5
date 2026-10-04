@@ -52,7 +52,7 @@
   "publish": [
     {
       "provider": "github",
-      "owner": "webadderall",
+      "owner": "fabianrm",
       "repo": "Recordly",
       "tagNamePrefix": "v",
       "publishAutoUpdate": true
