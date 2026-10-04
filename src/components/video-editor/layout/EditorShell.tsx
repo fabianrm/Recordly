@@ -31,6 +31,11 @@ import { EditorHeader } from "./EditorHeader";
 import { EditorPreviewPanel } from "./EditorPreviewPanel";
 import { EditorSidebar } from "./EditorSidebar";
 import { EditorTimelinePanel } from "./EditorTimelinePanel";
+import { EditorResizeHandle } from "./EditorResizeHandle";
+import { type ImperativePanelHandle, Panel, PanelGroup } from "react-resizable-panels";
+
+const EDITOR_VERTICAL_LAYOUT_ID = "recordly-editor-vertical";
+const TIMELINE_DEFAULT_SIZE = 25;
 
 type Props = {
 	t: ReturnType<typeof useI18n>["t"];
@@ -102,6 +107,7 @@ export function EditorShell(props: Props) {
 		library.setOpen(false);
 	}, [ui.activeEffectSection, library.setOpen]);
 	const timelinePanelRef = useRef<HTMLDivElement>(null);
+	const timelineLayoutPanelRef = useRef<ImperativePanelHandle>(null);
 	const wasImporting = useRef(false);
 	useEffect(() => {
 		if (wasImporting.current && !library.importing) timelinePanelRef.current?.focus();
@@ -341,86 +347,111 @@ export function EditorShell(props: Props) {
 						void library.addToTimeline(paths, index);
 				}}
 			>
-				<div className="relative z-10 flex min-h-0 flex-1 pt-3">
-					<EditorSidebar
-						accountUser={auth.user}
-						onAccountClick={() => requestSignIn("account")}
-						panelContent={
-							library.open ? <RecordingLibraryPanel library={library} /> : undefined
+				<PanelGroup
+					direction="vertical"
+					autoSaveId={EDITOR_VERTICAL_LAYOUT_ID}
+					className="min-h-0 flex-1"
+				>
+					<Panel id="editor-preview" order={1} minSize={25}>
+						<div className="relative z-10 flex h-full min-h-0 pt-3">
+							<EditorSidebar
+								accountUser={auth.user}
+								onAccountClick={() => requestSignIn("account")}
+								panelContent={
+									library.open ? (
+										<RecordingLibraryPanel library={library} />
+									) : undefined
+								}
+								t={t}
+								activeSection={ui.activeEffectSection}
+								setActiveSection={(section) => {
+									library.setOpen(false);
+									timeline.setSelectedAnnotationId(null);
+									timeline.setSelectedZoomId(null);
+									timeline.setSelectedClipId(null);
+									timeline.setSelectedAudioId(null);
+									timeline.setSelectedCaptionId(null);
+									ui.setActiveEffectSection(section);
+								}}
+								settingsPanelProps={{
+									...settingsPanelProps,
+									onShowOnboarding: showOnboarding,
+								}}
+							/>
+							<EditorPreviewPanel
+								t={t}
+								videoPath={project.videoPath}
+								previewVersion={ui.previewVersion}
+								aspectRatio={ui.aspectRatio}
+								setAspectRatio={ui.setAspectRatio}
+								previewAspectRatioValue={previewAspectRatioValue}
+								videoPlaybackRef={ui.videoPlaybackRef}
+								timelineRef={ui.timelineRef}
+								currentTime={ui.currentTime}
+								isPlaying={ui.isPlaying}
+								previewVolume={ui.previewVolume}
+								setPreviewVolume={ui.setPreviewVolume}
+								suspendRendering={exportStatus.shouldSuspendPreviewRendering}
+								appearance={appearance}
+								timeline={timeline}
+								audio={audio}
+								projection={projection}
+								playback={playback}
+								zoomCommands={zoomCommands}
+								annotationCommands={annotationCommands}
+								effectiveCursorTelemetry={cursor.effectiveCursorTelemetry}
+								effectiveShowCursor={effectiveShowCursor}
+								isCropped={ui.isCropped}
+								handleOpenCropEditor={ui.handleOpenCropEditor}
+								handleSaveAutoCaptionEdit={autoCaption.handleSaveAutoCaptionEdit}
+								handleSelectAnnotation={handleSelectAnnotation}
+								setDuration={ui.setDuration}
+								isPreviewReady={ui.isPreviewReady}
+								setIsPreviewReady={ui.setIsPreviewReady}
+								setCurrentTime={ui.setCurrentTime}
+								setIsPlaying={ui.setIsPlaying}
+								setError={handlePreviewError}
+							/>
+						</div>
+					</Panel>
+					<EditorResizeHandle
+						direction="vertical"
+						onReset={() =>
+							timelineLayoutPanelRef.current?.resize(TIMELINE_DEFAULT_SIZE)
 						}
-						t={t}
-						activeSection={ui.activeEffectSection}
-						setActiveSection={(section) => {
-							library.setOpen(false);
-							timeline.setSelectedAnnotationId(null);
-							timeline.setSelectedZoomId(null);
-							timeline.setSelectedClipId(null);
-							timeline.setSelectedAudioId(null);
-							timeline.setSelectedCaptionId(null);
-							ui.setActiveEffectSection(section);
-						}}
-						settingsPanelProps={{
-							...settingsPanelProps,
-							onShowOnboarding: showOnboarding,
-						}}
 					/>
-					<EditorPreviewPanel
-						t={t}
-						videoPath={project.videoPath}
-						previewVersion={ui.previewVersion}
-						aspectRatio={ui.aspectRatio}
-						setAspectRatio={ui.setAspectRatio}
-						previewAspectRatioValue={previewAspectRatioValue}
-						videoPlaybackRef={ui.videoPlaybackRef}
-						timelineRef={ui.timelineRef}
-						currentTime={ui.currentTime}
-						isPlaying={ui.isPlaying}
-						previewVolume={ui.previewVolume}
-						setPreviewVolume={ui.setPreviewVolume}
-						suspendRendering={exportStatus.shouldSuspendPreviewRendering}
-						appearance={appearance}
-						timeline={timeline}
-						audio={audio}
-						projection={projection}
-						playback={playback}
-						zoomCommands={zoomCommands}
-						annotationCommands={annotationCommands}
-						effectiveCursorTelemetry={cursor.effectiveCursorTelemetry}
-						effectiveShowCursor={effectiveShowCursor}
-						isCropped={ui.isCropped}
-						handleOpenCropEditor={ui.handleOpenCropEditor}
-						handleSaveAutoCaptionEdit={autoCaption.handleSaveAutoCaptionEdit}
-						handleSelectAnnotation={handleSelectAnnotation}
-						setDuration={ui.setDuration}
-						isPreviewReady={ui.isPreviewReady}
-						setIsPreviewReady={ui.setIsPreviewReady}
-						setCurrentTime={ui.setCurrentTime}
-						setIsPlaying={ui.setIsPlaying}
-						setError={handlePreviewError}
-					/>
-				</div>
-				<EditorTimelinePanel
-					panelRef={timelinePanelRef}
-					timelineRef={ui.timelineRef}
-					timeline={timeline}
-					projection={projection}
-					playback={playback}
-					audio={audio}
-					zoomCommands={zoomCommands}
-					clipCommands={clipCommands}
-					audioCommands={audioCommands}
-					captionCommands={captionCommands}
-					annotationCommands={annotationCommands}
-					videoPath={project.videoPath}
-					videoSourcePath={project.videoSourcePath}
-					cursorTelemetrySourcePath={timeline.cursorTelemetrySourcePath}
-					normalizedCursorTelemetry={cursor.normalizedCursorTelemetry}
-					autoSuggestZoomsTrigger={ui.autoSuggestZoomsTrigger}
-					handleAutoSuggestZoomsConsumed={handleAutoSuggestZoomsConsumed}
-					disableSuggestedZooms={!appearance.autoApplyFreshRecordingAutoZooms}
-					currentTime={ui.currentTime}
-					handleSelectAnnotation={handleSelectAnnotation}
-				/>
+					<Panel
+						id="editor-timeline"
+						order={2}
+						ref={timelineLayoutPanelRef}
+						defaultSize={TIMELINE_DEFAULT_SIZE}
+						minSize={15}
+						maxSize={70}
+					>
+						<EditorTimelinePanel
+							panelRef={timelinePanelRef}
+							timelineRef={ui.timelineRef}
+							timeline={timeline}
+							projection={projection}
+							playback={playback}
+							audio={audio}
+							zoomCommands={zoomCommands}
+							clipCommands={clipCommands}
+							audioCommands={audioCommands}
+							captionCommands={captionCommands}
+							annotationCommands={annotationCommands}
+							videoPath={project.videoPath}
+							videoSourcePath={project.videoSourcePath}
+							cursorTelemetrySourcePath={timeline.cursorTelemetrySourcePath}
+							normalizedCursorTelemetry={cursor.normalizedCursorTelemetry}
+							autoSuggestZoomsTrigger={ui.autoSuggestZoomsTrigger}
+							handleAutoSuggestZoomsConsumed={handleAutoSuggestZoomsConsumed}
+							disableSuggestedZooms={!appearance.autoApplyFreshRecordingAutoZooms}
+							currentTime={ui.currentTime}
+							handleSelectAnnotation={handleSelectAnnotation}
+						/>
+					</Panel>
+				</PanelGroup>
 			</div>
 			{library.importing && (
 				<div
