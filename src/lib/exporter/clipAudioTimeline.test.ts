@@ -70,6 +70,74 @@ describe("clip audio timeline", () => {
 		);
 		expect(starts[0]).toHaveBeenCalledWith(0.5, 0, 3);
 	});
+	it("reads a trimmed or split music region from its source offset", () => {
+		const processor = new TestAudioProcessor();
+		const { starts, ctx } = context();
+		processor.scheduleOverlay(
+			ctx,
+			buffer,
+			{ startMs: 500, endMs: 3500, volume: 1, sourceOffsetMs: 2000 } as AudioRegion,
+			[],
+			0,
+			4,
+			true,
+		);
+		expect(starts[0]).toHaveBeenCalledWith(0.5, 2, 3);
+	});
+	it("ramps music gain through its fades", () => {
+		const processor = new TestAudioProcessor();
+		const gains: Array<{ setValueAtTime: ReturnType<typeof vi.fn>; ramps: number[][] }> = [];
+		const ctx = {
+			destination: {},
+			createGain: () => {
+				const ramps: number[][] = [];
+				const gain = {
+					value: 1,
+					setValueAtTime: vi.fn(),
+					linearRampToValueAtTime: (value: number, time: number) =>
+						ramps.push([value, time]),
+				};
+				gains.push({ setValueAtTime: gain.setValueAtTime, ramps });
+				return { gain, connect: vi.fn() };
+			},
+			createBufferSource: () => ({
+				playbackRate: { value: 1 },
+				connect: vi.fn(),
+				start: vi.fn(),
+			}),
+		} as unknown as OfflineAudioContext;
+		processor.scheduleOverlay(
+			ctx,
+			buffer,
+			{ startMs: 1000, endMs: 3000, volume: 0.5, fadeInMs: 1000 } as AudioRegion,
+			[],
+			0,
+			4,
+			true,
+		);
+		expect(gains[0].setValueAtTime).toHaveBeenCalledWith(0, 1);
+		const fadeEnd = gains[0].ramps.find(([, time]) => Math.abs(time - 2) < 1e-9);
+		expect(fadeEnd?.[0]).toBeCloseTo(0.5);
+	});
+	it("skips muted music and mixes clips with a volume shape through the timeline", async () => {
+		const processor = new TestAudioProcessor();
+		const prepared = await processor.prepare(
+			"file:///tmp/source.mp4",
+			[],
+			[],
+			[{ id: "m", startMs: 0, endMs: 1000, audioPath: "/m.mp3", volume: 1, muted: true }],
+			[],
+			undefined,
+			undefined,
+			[{ ...clips[0], fadeOutMs: 200 }],
+		);
+		expect(prepared.regionEntries).toEqual([]);
+		expect(prepared.slices[0].envelope).toEqual({
+			fadeInMs: undefined,
+			fadeOutMs: 200,
+			volumeKeyframes: undefined,
+		});
+	});
 	it("schedules a clip correctly when its audio straddles an offline chunk boundary", async () => {
 		const processor = new TestAudioProcessor();
 		const prepared = await processor.prepare(

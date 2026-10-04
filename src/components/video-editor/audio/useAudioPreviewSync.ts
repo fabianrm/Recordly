@@ -9,6 +9,8 @@ import {
 	resolvePreviewMediaDuration,
 } from "@/lib/mediaTiming";
 import type { AudioRegion } from "../types";
+import { getAudioSourceOffsetMs } from "./audioRegionEdit";
+import { evaluateEnvelopeGain } from "./volumeEnvelope";
 import { supportsPreviewPlaybackRate } from "../videoPlayback/playbackRate";
 import {
 	getAudioResourceVersionKey,
@@ -31,6 +33,8 @@ interface UseAudioPreviewSyncParams {
 	sourceAudioFallbackStartDelayMsByPath: Record<string, number>;
 	sourceAudioResourceVersion: number;
 	isCurrentClipMuted: boolean;
+	/** Volume-shape multiplier of the clip under the playhead (1 when it has none). */
+	currentClipEnvelopeGain?: number;
 	getSourceTrackPreviewGain: (audioPath: string) => number;
 	onSourceFallbackLoadError: (error: unknown) => void;
 }
@@ -47,6 +51,7 @@ export function useAudioPreviewSync({
 	sourceAudioFallbackStartDelayMsByPath,
 	sourceAudioResourceVersion,
 	isCurrentClipMuted,
+	currentClipEnvelopeGain = 1,
 	getSourceTrackPreviewGain,
 	onSourceFallbackLoadError,
 }: UseAudioPreviewSyncParams) {
@@ -270,7 +275,8 @@ export function useAudioPreviewSync({
 				0,
 				Math.min(
 					1,
-					getSourceTrackPreviewGain(audioPath) * (isCurrentClipMuted ? 0 : previewVolume),
+					getSourceTrackPreviewGain(audioPath) *
+						(isCurrentClipMuted ? 0 : previewVolume * currentClipEnvelopeGain),
 				),
 			);
 		}
@@ -287,6 +293,7 @@ export function useAudioPreviewSync({
 	}, [
 		getSourceTrackPreviewGain,
 		isCurrentClipMuted,
+		currentClipEnvelopeGain,
 		onSourceFallbackLoadError,
 		resolvedSourceTracks,
 		sourceAudioResourceVersion,
@@ -337,6 +344,11 @@ export function useAudioPreviewSync({
 		};
 	}, []);
 
+	const audioRegionsByTrackId = useMemo(
+		() => new Map(audioRegions.map((region) => [`user:${region.id}`, region])),
+		[audioRegions],
+	);
+
 	useEffect(() => {
 		const currentTimeMs = timelineTime * 1000;
 
@@ -344,13 +356,25 @@ export function useAudioPreviewSync({
 			const audio = audioElementsRef.current.get(track.id);
 			if (!audio) continue;
 
+			const region = audioRegionsByTrackId.get(track.id);
 			const startMs = track.timelineBinding.startMs;
 			const endMs = track.timelineBinding.endMs;
 			const isInRegion = currentTimeMs >= startMs && currentTimeMs < endMs;
 
-			if (isPlaying && isInRegion) {
+			if (isPlaying && isInRegion && !region?.muted) {
 				enablePitchPreservingPlayback(audio);
-				const audioOffset = (currentTimeMs - startMs) / 1000;
+				audio.volume = Math.max(
+					0,
+					Math.min(
+						1,
+						track.gain *
+							previewVolume *
+							evaluateEnvelopeGain(region, currentTimeMs - startMs, endMs - startMs),
+					),
+				);
+				const audioOffset =
+					(currentTimeMs - startMs + (region ? getAudioSourceOffsetMs(region) : 0)) /
+					1000;
 				if (Math.abs(audio.currentTime - audioOffset) > 0.2) {
 					audio.currentTime = audioOffset;
 				}
@@ -369,7 +393,7 @@ export function useAudioPreviewSync({
 				audio.pause();
 			}
 		}
-	}, [isPlaying, resolvedUserTracks, timelineTime]);
+	}, [audioRegionsByTrackId, isPlaying, previewVolume, resolvedUserTracks, timelineTime]);
 
 	useEffect(() => {
 		if (resolvedSourceTracks.length === 0) {
@@ -404,7 +428,7 @@ export function useAudioPreviewSync({
 				Math.min(
 					1,
 					getSourceTrackPreviewGain(sourceAudioPath) *
-						(isCurrentClipMuted ? 0 : previewVolume),
+						(isCurrentClipMuted ? 0 : previewVolume * currentClipEnvelopeGain),
 				),
 			);
 
@@ -471,6 +495,7 @@ export function useAudioPreviewSync({
 		sourcePlaybackRate,
 		getSourceTrackPreviewGain,
 		isCurrentClipMuted,
+		currentClipEnvelopeGain,
 		isPlaying,
 		previewVolume,
 		resolvedSourceTracks,

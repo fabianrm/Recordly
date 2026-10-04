@@ -1,4 +1,4 @@
-import { requiresClipTimelineRendering } from "./clipTimeline";
+import { hasClipSourceAudioEdits, requiresClipTimelineRendering } from "./clipTimeline";
 import type {
 	AnnotationRegion,
 	AudioRegion,
@@ -578,7 +578,7 @@ export class VideoExporter {
 			sourceAudioFallbackPaths.length > 1 ||
 			hasTimedSourceAudioFallback ||
 			hasNonDefaultSourceTrackSettings(this.config.sourceAudioTrackSettings) ||
-			(this.config.clipRegions ?? []).some((clip) => Boolean(clip.muted))
+			hasClipSourceAudioEdits(this.config.clipRegions)
 		) {
 			const sourceDurationMs = Math.max(
 				0,

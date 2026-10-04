@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { AudioRangeSelection } from "../audio/audioRegionEdit";
 import type { SourceAudioTrackSettings } from "../audio/audioTypes";
 import type {
 	AnnotationRegion,
@@ -27,6 +28,10 @@ export function useTimelineState() {
 	const [audioRegions, setAudioRegions] = useState<AudioRegion[]>([]);
 	const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null);
 	const [selectedCaptionId, setSelectedCaptionId] = useState<string | null>(null);
+	// Transient: never saved or added to history.
+	const [audioRangeSelection, setAudioRangeSelection] = useState<AudioRangeSelection | null>(
+		null,
+	);
 	const [sourceAudioTrackSettingsByClip, setSourceAudioTrackSettingsByClip] = useState<
 		Record<string, SourceAudioTrackSettings>
 	>({});
@@ -66,6 +71,8 @@ export function useTimelineState() {
 		setSelectedAudioId,
 		selectedCaptionId,
 		setSelectedCaptionId,
+		audioRangeSelection,
+		setAudioRangeSelection,
 		sourceAudioTrackSettingsByClip,
 		setSourceAudioTrackSettingsByClip,
 		defaultSourceAudioTrackSettings,

@@ -1,3 +1,4 @@
+import { splitVolumeEnvelope } from "./audio/volumeEnvelope";
 import { type ClipRegion, getClipSourceEndMs } from "./types";
 
 export interface ClipSplitPlan {
@@ -31,13 +32,21 @@ export function planClipSplit(params: {
 		return null;
 	}
 
+	const { fadeInMs, fadeOutMs, volumeKeyframes, ...rest } = target;
+	const envelope = splitVolumeEnvelope(
+		{ fadeInMs, fadeOutMs, volumeKeyframes },
+		splitAtMs - target.startMs,
+		target.endMs - target.startMs,
+	);
 	const left: ClipRegion = {
-		...target,
+		...rest,
+		...envelope.left,
 		id: createId(),
 		endMs: splitAtMs,
 	};
 	const right: ClipRegion = {
-		...target,
+		...rest,
+		...envelope.right,
 		id: createId(),
 		startMs: splitAtMs,
 		endMs: target.endMs,

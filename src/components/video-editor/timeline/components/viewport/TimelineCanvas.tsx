@@ -457,10 +457,11 @@ function AudioItemWithWaveform({
 	onSelectAudio,
 }: AudioItemWithWaveformProps) {
 	const { peaks } = useTimelineAudioPeaks(item.audioPath ?? null);
+	const sourceOffsetMs = item.audioSourceOffsetMs ?? 0;
 	const normalizedWaveformSpan = useMemo(() => {
 		const duration = Math.max(0, waveformSpan.end - waveformSpan.start);
-		return { start: 0, end: duration };
-	}, [waveformSpan.end, waveformSpan.start]);
+		return { start: sourceOffsetMs, end: sourceOffsetMs + duration };
+	}, [sourceOffsetMs, waveformSpan.end, waveformSpan.start]);
 	return (
 		<Item
 			id={item.id}
@@ -473,6 +474,9 @@ function AudioItemWithWaveform({
 			waveformSegmentSpan={normalizedWaveformSpan}
 			waveformGain={Math.max(0, Math.min(1, item.audioGain ?? 1))}
 			waveformNormalize={Boolean(item.audioNormalize)}
+			muted={item.muted}
+			volumeEnvelope={item.volumeEnvelope}
+			rangeTarget={{ kind: "audio", targetId: item.id }}
 		>
 			{item.label}
 		</Item>
@@ -773,6 +777,8 @@ const TimelineCanvasRows = memo(function TimelineCanvasRows({
 										waveformGain={Math.max(0, Math.min(1, settings.volume))}
 										waveformNormalize={Boolean(settings.normalize)}
 										muted={item.muted}
+										volumeEnvelope={item.volumeEnvelope}
+										rangeTarget={{ kind: "source", targetId: item.id }}
 									>
 										{track.label}
 									</Item>

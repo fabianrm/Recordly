@@ -1,3 +1,4 @@
+import { evaluateEnvelopeGain, hasVolumeEnvelope } from "./volumeEnvelope";
 import React, { useMemo } from "react";
 import type { SourceAudioTrackSettings } from "@/components/video-editor/audio/audioTypes";
 import { resolveSourceTrackRoutingPolicy } from "@/lib/exporter/sourceTrackRoutingPolicy";
@@ -87,6 +88,16 @@ export function useVideoEditorAudio({
 		() => findClipAtTimelineTime(timelineTime * 1000, clipRegions)?.id ?? null,
 		[clipRegions, timelineTime],
 	);
+	// Source-audio volume shape of the clip under the playhead, for preview playback.
+	const currentClipEnvelopeGain = useMemo(() => {
+		const clip = findClipAtTimelineTime(timelineTime * 1000, clipRegions);
+		if (!clip || !hasVolumeEnvelope(clip)) return 1;
+		return evaluateEnvelopeGain(
+			clip,
+			timelineTime * 1000 - clip.startMs,
+			clip.endMs - clip.startMs,
+		);
+	}, [clipRegions, timelineTime]);
 	const isCurrentClipMuted = useMemo(
 		() =>
 			activeClipIdAtCurrentTime === null ||
@@ -125,6 +136,7 @@ export function useVideoEditorAudio({
 		sourceAudioFallbackStartDelayMsByPath,
 		sourceAudioResourceVersion: sourceAudioFallbackRefreshKey,
 		isCurrentClipMuted,
+		currentClipEnvelopeGain,
 		getSourceTrackPreviewGain,
 		onSourceFallbackLoadError,
 	});
@@ -136,6 +148,7 @@ export function useVideoEditorAudio({
 		shouldMutePreviewVideo,
 		activeClipIdAtCurrentTime,
 		isCurrentClipMuted,
+		currentClipEnvelopeGain,
 		sourceAudioTrackMeta,
 		activeSourceAudioTrackSettings,
 		selectedClipSourceAudioTrackSettings,

@@ -1,3 +1,4 @@
+import { scheduleVolumeEnvelope } from "@/components/video-editor/audio/volumeEnvelope";
 import type { SpeedRegion } from "@/components/video-editor/types";
 import { AudioProcessorBase } from "./audioProcessorBase";
 import type { TimelineSlice, TrimLikeRegion } from "./audioProcessorShared";
@@ -180,7 +181,21 @@ export class AudioTimelineProcessor extends AudioProcessorBase {
 				}
 				const source = ctx.createBufferSource();
 				const gainNode = ctx.createGain();
-				gainNode.gain.value = Math.max(0, Math.min(2, gain));
+				const baseGain = Math.max(0, Math.min(2, gain));
+				if (slice.envelope && slice.outputStartMs !== undefined) {
+					const fromLocalMs = audibleRange.startSec * 1000 - slice.outputStartMs;
+					scheduleVolumeEnvelope({
+						param: gainNode.gain,
+						envelope: slice.envelope,
+						durationMs: sliceOutputDurationSec * 1000,
+						baseGain,
+						contextStartSec: audibleRange.startSec - chunkOutputStartSec,
+						fromLocalMs,
+						toLocalMs: fromLocalMs + audibleDurationSec * 1000,
+					});
+				} else {
+					gainNode.gain.value = baseGain;
+				}
 
 				const sourceOffsetSec =
 					effectiveBufferStartSec +

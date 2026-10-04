@@ -1,3 +1,4 @@
+import { shiftVolumeKeyframes } from "./audio/volumeEnvelope";
 import { type ClipRegion, getClipSourceStartMs } from "./types";
 
 export function changeClipSpan(
@@ -25,5 +26,9 @@ export function changeClipSpan(
 					speed,
 		),
 	);
-	return { ...clip, startMs: start, endMs: end, sourceStartMs };
+	const resized: ClipRegion = { ...clip, startMs: start, endMs: end, sourceStartMs };
+	if (clip.volumeKeyframes) {
+		resized.volumeKeyframes = shiftVolumeKeyframes(clip.volumeKeyframes, start - clip.startMs);
+	}
+	return resized;
 }

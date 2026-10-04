@@ -39,6 +39,8 @@ export const FIXED_SHORTCUTS: FixedShortcut[] = [
 	},
 	{ label: "Pan Timeline", display: "Shift + Scroll", bindings: [] },
 	{ label: "Zoom Timeline", display: "Ctrl + Scroll", bindings: [] },
+	{ label: "Select Audio Range", display: "Shift + Drag", bindings: [] },
+	{ label: "Silence Audio Selection", display: "M", bindings: [{ key: "m" }] },
 ];
 
 export type ShortcutConflict =

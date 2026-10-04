@@ -1,3 +1,4 @@
+import type { VolumeEnvelope } from "../../audio/volumeEnvelope";
 import type { Span } from "dnd-timeline";
 import type { ShortcutBinding } from "@/lib/shortcuts";
 import type { ZoomMode } from "../../types";
@@ -46,6 +47,9 @@ export interface TimelineRenderItem {
 	speedValue?: number;
 	showSourceAudio?: boolean;
 	muted?: boolean;
+	/** Where an audio region starts reading inside its file. */
+	audioSourceOffsetMs?: number;
+	volumeEnvelope?: VolumeEnvelope;
 	variant: "zoom" | "trim" | "clip" | "annotation" | "speed" | "audio" | "caption";
 }
 

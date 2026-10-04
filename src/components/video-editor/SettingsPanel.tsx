@@ -41,6 +41,9 @@ import {
 import { loadEditorPreferences, saveEditorPreferences } from "./editorPreferences";
 import { getDefaultBorderRadiusPercent } from "./projectPersistence";
 import { SliderControl } from "./SliderControl";
+import type { AudioRangeSelection } from "./audio/audioRegionEdit";
+import { AudioRangeControls, VolumeShapeControls } from "./audio/VolumeShapeControls";
+import type { VolumeEnvelope } from "./audio/volumeEnvelope";
 import { WallpaperGrid } from "./WallpaperGrid";
 import { useShortcuts } from "@/contexts/ShortcutsContext";
 import { SettingsRow } from "./SettingsRow";
@@ -438,10 +441,19 @@ interface SettingsPanelProps {
 	onResetClipAudio?: () => void;
 	onClipSpeedChange?: (speed: number) => void;
 	onClipMutedChange?: (muted: boolean) => void;
+	selectedClipEnvelope?: VolumeEnvelope | null;
+	audioRangeSelection?: AudioRangeSelection | null;
+	onAudioRangeMute?: () => void;
+	onAudioRangeDelete?: () => void;
+	onClipEnvelopeChange?: (patch: VolumeEnvelope) => void;
 	onClipDelete?: (id: string) => void;
 	selectedAudioId?: string | null;
 	selectedAudioVolume?: number | null;
 	selectedAudioNormalize?: boolean | null;
+	selectedAudioMuted?: boolean | null;
+	selectedAudioEnvelope?: VolumeEnvelope | null;
+	onAudioMutedChange?: (muted: boolean) => void;
+	onAudioEnvelopeChange?: (patch: VolumeEnvelope) => void;
 	onAudioVolumeChange?: (volume: number) => void;
 	onAudioNormalizeChange?: (normalize: boolean) => void;
 	onAudioDelete?: (id: string) => void;
@@ -895,10 +907,19 @@ export function SettingsPanel({
 	onResetClipAudio,
 	onClipSpeedChange,
 	onClipMutedChange,
+	selectedClipEnvelope,
+	onClipEnvelopeChange,
+	audioRangeSelection,
+	onAudioRangeMute,
+	onAudioRangeDelete,
 	onClipDelete,
 	selectedAudioId,
 	selectedAudioVolume,
 	selectedAudioNormalize,
+	selectedAudioMuted,
+	selectedAudioEnvelope,
+	onAudioMutedChange,
+	onAudioEnvelopeChange,
 	onAudioVolumeChange,
 	onAudioNormalizeChange,
 	onAudioDelete,
@@ -2670,6 +2691,12 @@ export function SettingsPanel({
 						onClick={() => {
 							onAudioVolumeChange?.(1);
 							onAudioNormalizeChange?.(false);
+							onAudioMutedChange?.(false);
+							onAudioEnvelopeChange?.({
+								fadeInMs: 0,
+								fadeOutMs: 0,
+								volumeKeyframes: [],
+							});
 						}}
 					>
 						{t("common.actions.reset", "Reset")}
@@ -2694,6 +2721,27 @@ export function SettingsPanel({
 						onCheckedChange={(v) => onAudioNormalizeChange?.(v)}
 					/>
 				</div>
+				<div className="flex items-center justify-between py-2">
+					<span className="text-xs text-muted-foreground">
+						{tSettings("audio.mute", "Mute audio")}
+					</span>
+					<Switch
+						aria-label={tSettings("audio.mute", "Mute audio")}
+						checked={Boolean(selectedAudioMuted)}
+						onCheckedChange={(v) => onAudioMutedChange?.(v)}
+					/>
+				</div>
+				{onAudioEnvelopeChange && (
+					<VolumeShapeControls
+						envelope={selectedAudioEnvelope ?? {}}
+						onChange={onAudioEnvelopeChange}
+					/>
+				)}
+				<AudioRangeControls
+					selection={audioRangeSelection?.kind === "audio" ? audioRangeSelection : null}
+					onMute={onAudioRangeMute}
+					onDelete={onAudioRangeDelete}
+				/>
 			</section>
 		);
 
@@ -2732,6 +2780,17 @@ export function SettingsPanel({
 						aria-label={tSettings("clip.mute", "Mute clip")}
 					/>
 				</label>
+				{onClipEnvelopeChange && !selectedClipMuted && (
+					<VolumeShapeControls
+						envelope={selectedClipEnvelope ?? {}}
+						onChange={onClipEnvelopeChange}
+					/>
+				)}
+				<AudioRangeControls
+					selection={audioRangeSelection?.kind === "source" ? audioRangeSelection : null}
+					onMute={onAudioRangeMute}
+					onDelete={onAudioRangeDelete}
+				/>
 				{hasClipAudioOverrides && onResetClipAudio && (
 					<Button type="button" variant="ghost" onClick={onResetClipAudio}>
 						{tSettings("clip.resetAudioSettings", "Reset audio settings")}

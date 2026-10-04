@@ -1,3 +1,4 @@
+import { hasVolumeEnvelope, type VolumeEnvelope } from "../../audio/volumeEnvelope";
 import { formatClipSpeedLabel } from "../../clipSpeedChange";
 import type {
 	AnnotationRegion,
@@ -17,6 +18,18 @@ import {
 	isAudioTrackRowId,
 } from "../core/rows";
 import type { TimelineRegionSpan, TimelineRenderItem } from "../core/timelineTypes";
+
+function pickVolumeEnvelope(region: VolumeEnvelope): Pick<TimelineRenderItem, "volumeEnvelope"> {
+	return hasVolumeEnvelope(region)
+		? {
+				volumeEnvelope: {
+					fadeInMs: region.fadeInMs,
+					fadeOutMs: region.fadeOutMs,
+					volumeKeyframes: region.volumeKeyframes,
+				},
+			}
+		: {};
+}
 
 export function getAnnotationLabel(region: AnnotationRegion): string {
 	if (region.type === "text") {
@@ -75,6 +88,7 @@ export function buildTimelineItems(params: {
 			speedValue: speedLabel ? speed : undefined,
 			showSourceAudio: region.showSourceAudio,
 			muted: Boolean(region.muted),
+			...pickVolumeEnvelope(region),
 			variant: "clip",
 		};
 	});
@@ -95,6 +109,9 @@ export function buildTimelineItems(params: {
 		audioPath: region.audioPath,
 		audioGain: region.volume,
 		audioNormalize: Boolean(region.normalize),
+		audioSourceOffsetMs: region.sourceOffsetMs,
+		muted: Boolean(region.muted),
+		...pickVolumeEnvelope(region),
 		variant: "audio",
 	}));
 

@@ -11,6 +11,7 @@ import type { EditorEffectSection } from "../types";
 import type { VideoPlaybackRef } from "../VideoPlayback";
 import { getErrorMessage, summarizeErrorMessage } from "../videoEditorUtils";
 import { useAnnotationRegionCommands } from "./useAnnotationRegionCommands";
+import { useAudioRangeCommands } from "./useAudioRangeCommands";
 import { useAudioRegionCommands } from "./useAudioRegionCommands";
 import { useCaptionCommands } from "./useCaptionCommands";
 import { useClipRegionCommands } from "./useClipRegionCommands";
@@ -194,6 +195,7 @@ export function useTimelineEditingController(input: Input) {
 	});
 	const audioCommands = useAudioRegionCommands({
 		setSelectedClipId: timeline.setSelectedClipId,
+		audioRegions: timeline.audioRegions,
 		setAudioRegions: timeline.setAudioRegions,
 		selectedAudioId: timeline.selectedAudioId,
 		setSelectedAudioId: timeline.setSelectedAudioId,
@@ -202,6 +204,19 @@ export function useTimelineEditingController(input: Input) {
 		setSelectedCaptionId: timeline.setSelectedCaptionId,
 		setActiveEffectSection: input.setActiveEffectSection,
 		nextAudioIdRef: input.nextAudioIdRef,
+	});
+	const rangeCommands = useAudioRangeCommands({
+		selection: timeline.audioRangeSelection,
+		setSelection: timeline.setAudioRangeSelection,
+		audioRegions: timeline.audioRegions,
+		setAudioRegions: timeline.setAudioRegions,
+		clipRegions: timeline.clipRegions,
+		setClipRegions: timeline.setClipRegions,
+		applyClipSequence: clipCommands.applySequence,
+		setSelectedAudioId: timeline.setSelectedAudioId,
+		setSelectedClipId: timeline.setSelectedClipId,
+		nextAudioIdRef: input.nextAudioIdRef,
+		nextClipIdRef: input.nextClipIdRef,
 	});
 	const annotationCommands = useAnnotationRegionCommands({
 		onSelectAnnotation: handleSelectAnnotation,
@@ -232,6 +247,7 @@ export function useTimelineEditingController(input: Input) {
 		zoomCommands,
 		clipCommands,
 		audioCommands,
+		rangeCommands,
 		annotationCommands,
 		handleSelectAnnotation,
 		handleAutoSuggestZoomsConsumed: freshZoom.handleAutoSuggestZoomsConsumed,

@@ -53,7 +53,7 @@ import {
 	shouldPreferNativeAutoBackend,
 	shouldPreferNativeStaticLayoutBeforeBreeze,
 } from "./backendPolicy";
-import { requiresClipTimelineRendering } from "./clipTimeline";
+import { hasClipSourceAudioEdits, requiresClipTimelineRendering } from "./clipTimeline";
 import { buildEditedTrackSourceSegments, classifyEditedTrackStrategy } from "./editedTrackStrategy";
 import {
 	type ExportBackpressureProfile,
@@ -1492,7 +1492,7 @@ export class ModernVideoExporter {
 			sourceAudioFallbackPaths.length > 1 ||
 			hasTimedSourceAudioFallback ||
 			hasNonDefaultSourceTrackSettings(this.config.sourceAudioTrackSettings) ||
-			(this.config.clipRegions ?? []).some((clip) => Boolean(clip.muted))
+			hasClipSourceAudioEdits(this.config.clipRegions)
 		) {
 			const sourceDurationMs = Math.max(
 				0,
@@ -1515,7 +1515,7 @@ export class ModernVideoExporter {
 			const requiresRenderedEditedTrack =
 				requiresClipTimelineRendering(this.config.clipRegions) ||
 				hasNonDefaultSourceTrackSettings(this.config.sourceAudioTrackSettings) ||
-				(this.config.clipRegions ?? []).some((clip) => Boolean(clip.muted));
+				hasClipSourceAudioEdits(this.config.clipRegions);
 			const strategy =
 				canUsePrimaryAudioFiltergraph && !requiresRenderedEditedTrack
 					? classifyEditedTrackStrategy({

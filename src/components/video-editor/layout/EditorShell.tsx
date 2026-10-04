@@ -137,6 +137,7 @@ export function EditorShell(props: Props) {
 		zoomCommands,
 		clipCommands,
 		audioCommands,
+		rangeCommands,
 		annotationCommands,
 		handleSelectAnnotation,
 		handleAutoSuggestZoomsConsumed,
@@ -438,6 +439,7 @@ export function EditorShell(props: Props) {
 							zoomCommands={zoomCommands}
 							clipCommands={clipCommands}
 							audioCommands={audioCommands}
+							rangeCommands={rangeCommands}
 							captionCommands={captionCommands}
 							annotationCommands={annotationCommands}
 							videoPath={project.videoPath}

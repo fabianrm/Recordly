@@ -1,3 +1,7 @@
+import type { VolumeKeyframe } from "./audio/volumeEnvelope";
+
+export type { VolumeKeyframe } from "./audio/volumeEnvelope";
+
 export type ZoomDepth = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface ZoomFocus {
@@ -244,6 +248,10 @@ export interface ClipRegion {
 	speed: number;
 	muted?: boolean;
 	showSourceAudio?: boolean;
+	/** Volume shape for the clip's source audio, relative to the clip start. */
+	fadeInMs?: number;
+	fadeOutMs?: number;
+	volumeKeyframes?: VolumeKeyframe[];
 }
 
 export function getClipSourceStartMs(clip: ClipRegion): number {
@@ -564,6 +572,13 @@ export interface AudioRegion {
 	volume: number;
 	normalize?: boolean;
 	trackIndex?: number;
+	/** Where playback starts inside the audio file (left trim / split). */
+	sourceOffsetMs?: number;
+	muted?: boolean;
+	fadeInMs?: number;
+	fadeOutMs?: number;
+	/** Volume points relative to the region start. */
+	volumeKeyframes?: VolumeKeyframe[];
 }
 
 export interface CaptionCue {

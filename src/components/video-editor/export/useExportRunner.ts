@@ -51,7 +51,9 @@ export function useExportRunner(input: ExportRunnerInput) {
 				remountPreview,
 			} = inputRef.current;
 			const { shadowIntensity, padding } = appearance;
-			const { audioRegions, clipRegions, selectedClipId } = timeline;
+			const { clipRegions, selectedClipId } = timeline;
+			// Muted regions contribute nothing; dropping them keeps the no-audio fast paths available.
+			const audioRegions = timeline.audioRegions.filter((region) => !region.muted);
 			const {
 				exportQuality,
 				exportEncodingMode,

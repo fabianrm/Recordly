@@ -1,5 +1,5 @@
 import type { WebDemuxer } from "web-demuxer";
-import { requiresClipTimelineRendering } from "./clipTimeline";
+import { hasClipSourceAudioEdits, requiresClipTimelineRendering } from "./clipTimeline";
 import type {
 	AudioRegion,
 	ClipRegion,
@@ -155,7 +155,7 @@ export class AudioProcessor extends AudioTranscodeProcessor {
 			sortedAudioRegions.length > 0 ||
 			needsSourceAudioMixing ||
 			hasNonDefaultSourceTrackSettings(sourceAudioTrackSettings) ||
-			(clipRegions ?? []).some((clip) => Boolean(clip.muted))
+			hasClipSourceAudioEdits(clipRegions)
 		) {
 			await this.renderAndMuxOfflineAudio(
 				videoUrl,

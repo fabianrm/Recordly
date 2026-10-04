@@ -1,3 +1,4 @@
+import type { VolumeEnvelope } from "@/components/video-editor/audio/volumeEnvelope";
 import { SOURCE_AUDIO_NORMALIZE_GAIN } from "@/components/video-editor/audio/audioTypes";
 import type {
 	AudioRegion,
@@ -113,6 +114,8 @@ export interface TimelineSlice {
 	sourceStartMs: number;
 	sourceEndMs: number;
 	speed: number;
+	/** Source-audio volume shape of the clip this slice came from (clip timeline only). */
+	envelope?: VolumeEnvelope;
 }
 
 export interface PreparedOfflineRender {

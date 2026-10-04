@@ -20,6 +20,14 @@ import { formatClipSpeedLabel } from "../clipSpeedChange";
 import { getTimeAtClipSeam, type ClipPresentation } from "./core/clipPresentation";
 import { formatPlayheadTime } from "./core/time";
 import AudioWaveform from "./components/waveform/AudioWaveform";
+import { VolumeEnvelopeOverlay } from "./components/waveform/VolumeEnvelopeOverlay";
+import {
+	type AudioRangeTarget,
+	AudioRangeHighlight,
+	beginAudioRangeDrag,
+	useAudioRange,
+} from "./components/waveform/AudioRangeSelection";
+import { hasVolumeEnvelope, type VolumeEnvelope } from "../audio/volumeEnvelope";
 import type { AudioPeaksData } from "./core/timelineTypes";
 import glassStyles from "./ItemGlass.module.css";
 
@@ -48,6 +56,10 @@ interface ItemProps {
 	waveformGain?: number;
 	waveformNormalize?: boolean;
 	muted?: boolean;
+	/** Read-only volume line (fades) over the waveform. */
+	volumeEnvelope?: VolumeEnvelope;
+	/** Enables Shift+drag range selection on this audio item. */
+	rangeTarget?: AudioRangeTarget;
 	variant?: "zoom" | "trim" | "clip" | "annotation" | "speed" | "audio" | "caption";
 	isLoading?: boolean;
 	loadingLabel?: string;
@@ -87,12 +99,21 @@ export default function Item({
 	waveformGain = 1,
 	waveformNormalize = false,
 	muted = false,
+	volumeEnvelope,
+	rangeTarget,
 	variant = "zoom",
 	isLoading = false,
 	loadingLabel,
 	children,
 }: ItemProps) {
 	const timeline = useTimelineContext();
+	const audioRange = useAudioRange();
+	const rangeSelectionHere =
+		rangeTarget &&
+		audioRange.selection?.kind === rangeTarget.kind &&
+		audioRange.selection.targetId === rangeTarget.targetId
+			? audioRange.selection
+			: null;
 	const presentation = useTimelinePresentation();
 	const clipPresentation =
 		variant === "clip" ? undefined : (suppliedPresentation ?? presentation.clips);
@@ -250,9 +271,17 @@ export default function Item({
 							: glassStyles.glassYellow;
 
 	const MIN_ITEM_PX = 6;
-	const handleSelect = () => {
+	const handleSelect = (event: React.PointerEvent<HTMLDivElement>) => {
 		onSelect?.();
 		onSelectId?.(id);
+		if (!rangeTarget || !audioRange.setSelection) return;
+		const startedRange = beginAudioRangeDrag({
+			event,
+			target: rangeTarget,
+			span,
+			setSelection: audioRange.setSelection,
+		});
+		if (!startedRange && audioRange.selection) audioRange.setSelection(null);
 	};
 	const safeItemStyle = {
 		...itemStyle,
@@ -356,6 +385,15 @@ export default function Item({
 							normalize={waveformNormalize}
 							className="absolute inset-0 w-full h-full pointer-events-none opacity-45"
 						/>
+					)}
+					{isAudio && hasVolumeEnvelope(volumeEnvelope) && (
+						<VolumeEnvelopeOverlay
+							envelope={volumeEnvelope ?? {}}
+							durationMs={span.end - span.start}
+						/>
+					)}
+					{rangeSelectionHere && (
+						<AudioRangeHighlight selection={rangeSelectionHere} span={span} />
 					)}
 					{/* Muted overlay for source audio track items */}
 					{isAudio && muted && (

@@ -251,7 +251,13 @@
 		"systemLabel": "Sorgente sistema",
 		"micLabel": "Sorgente microfono",
 		"mixedLabel": "Sorgente",
-		"deleteRegion": "Elimina audio"
+		"deleteRegion": "Elimina audio",
+		"mute": "Mute audio",
+		"fadeIn": "Fade in",
+		"fadeOut": "Fade out",
+		"selectionHint": "Hold Shift and drag over an audio track to select a range. M silences it; Delete removes it and closes the gap.",
+		"muteSelection": "Silence selection (M)",
+		"deleteSelection": "Delete selection (Del)"
 	},
 	"updates": {
 		"experimentalDescription": "Hai attivato gli aggiornamenti sperimentali, quindi puoi scegliere di provare l'ultimo aggiornamento di Recordly prima che sia disponibile per tutti.",

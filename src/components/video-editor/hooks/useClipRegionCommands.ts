@@ -9,7 +9,9 @@ import {
 	rippleRegions,
 } from "../clipSequence";
 import { getClipSourceStartMs, type AnnotationRegion, type AudioRegion } from "../types";
+import type { VolumeEnvelope } from "../audio/volumeEnvelope";
 import { planClipSplit } from "../clipSplit";
+import { applyEnvelopePatch } from "./useAudioRegionCommands";
 import type { ClipRegion, EditorEffectSection, ZoomRegion } from "../types";
 import { supportsPreviewPlaybackRate } from "../videoPlayback/playbackRate";
 
@@ -149,6 +151,18 @@ export function useClipRegionCommands({
 								...clip,
 								sourceStartMs: getClipSourceStartMs(clip),
 								speed,
+								...(clip.volumeKeyframes
+									? {
+											volumeKeyframes: clip.volumeKeyframes.map(
+												(keyframe) => ({
+													...keyframe,
+													timeMs: Math.round(
+														(keyframe.timeMs * clip.speed) / speed,
+													),
+												}),
+											),
+										}
+									: {}),
 								endMs:
 									clip.startMs +
 									Math.max(
@@ -174,6 +188,17 @@ export function useClipRegionCommands({
 		},
 		[selectedClipId, setClipRegions],
 	);
+	const handleClipEnvelopeChange = useCallback(
+		(patch: VolumeEnvelope) => {
+			if (!selectedClipId) return;
+			setClipRegions((current) =>
+				current.map((clip) =>
+					clip.id === selectedClipId ? applyEnvelopePatch(clip, patch) : clip,
+				),
+			);
+		},
+		[selectedClipId, setClipRegions],
+	);
 	const handleClipShowSourceAudioChange = useCallback(
 		(showSourceAudio: boolean) => {
 			if (!selectedClipId) return;
@@ -195,9 +220,11 @@ export function useClipRegionCommands({
 	);
 
 	return {
+		applySequence,
 		handleSelectClip,
 		handleClipSplit,
 		handleClipSpanChange,
+		handleClipEnvelopeChange,
 		handleClipSpeedChange,
 		handleClipMutedChange,
 		handleClipShowSourceAudioChange,

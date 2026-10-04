@@ -3,6 +3,7 @@ import type { AspectRatio } from "@/utils/aspectRatioUtils";
 import { useClipAudioReset } from "../audio/useClipAudioReset";
 import type { useAutoCaptionController } from "../captions/useAutoCaptionController";
 import type { useAnnotationRegionCommands } from "../hooks/useAnnotationRegionCommands";
+import type { useAudioRangeCommands } from "../hooks/useAudioRangeCommands";
 import type { useAudioRegionCommands } from "../hooks/useAudioRegionCommands";
 import type { useCaptionCommands } from "../hooks/useCaptionCommands";
 import type { useClipRegionCommands } from "../hooks/useClipRegionCommands";
@@ -19,6 +20,7 @@ type Input = {
 	zoomCommands: ReturnType<typeof useZoomRegionCommands>;
 	clipCommands: ReturnType<typeof useClipRegionCommands>;
 	audioCommands: ReturnType<typeof useAudioRegionCommands>;
+	rangeCommands: ReturnType<typeof useAudioRangeCommands>;
 	captionCommands: ReturnType<typeof useCaptionCommands>;
 	annotationCommands: ReturnType<typeof useAnnotationRegionCommands>;
 	autoCaptionController: ReturnType<typeof useAutoCaptionController>;
@@ -47,6 +49,7 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		zoomCommands,
 		clipCommands,
 		audioCommands,
+		rangeCommands,
 		captionCommands,
 		annotationCommands,
 		autoCaptionController,
@@ -97,11 +100,20 @@ export function useEditorSettingsPanelProps(input: Input): ComponentProps<typeof
 		selectedClipMuted: selectedClip?.muted ?? (timeline.selectedClipId ? false : null),
 		onClipSpeedChange: clipCommands.handleClipSpeedChange,
 		onClipMutedChange: clipCommands.handleClipMutedChange,
+		selectedClipEnvelope: selectedClip ?? null,
+		onClipEnvelopeChange: clipCommands.handleClipEnvelopeChange,
+		audioRangeSelection: timeline.audioRangeSelection,
+		onAudioRangeMute: rangeCommands.handleRangeMute,
+		onAudioRangeDelete: rangeCommands.handleRangeDelete,
 		onClipDelete: clipCommands.handleClipDelete,
 		selectedAudioId: timeline.selectedAudioId,
 		selectedAudioVolume: selectedAudio?.volume ?? null,
 		selectedAudioNormalize:
 			selectedAudio?.normalize ?? (timeline.selectedAudioId ? false : null),
+		selectedAudioMuted: selectedAudio?.muted ?? (timeline.selectedAudioId ? false : null),
+		selectedAudioEnvelope: selectedAudio ?? null,
+		onAudioMutedChange: audioCommands.handleAudioMutedChange,
+		onAudioEnvelopeChange: audioCommands.handleAudioEnvelopeChange,
 		onAudioVolumeChange: audioCommands.handleAudioVolumeChange,
 		onAudioNormalizeChange: audioCommands.handleAudioNormalizeChange,
 		onAudioDelete: audioCommands.handleAudioDelete,

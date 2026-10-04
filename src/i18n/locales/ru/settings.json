@@ -251,7 +251,13 @@
 		"systemLabel": "Системный звук",
 		"micLabel": "Микрофон",
 		"mixedLabel": "Источник",
-		"deleteRegion": "Удалить аудио"
+		"deleteRegion": "Удалить аудио",
+		"mute": "Mute audio",
+		"fadeIn": "Fade in",
+		"fadeOut": "Fade out",
+		"selectionHint": "Hold Shift and drag over an audio track to select a range. M silences it; Delete removes it and closes the gap.",
+		"muteSelection": "Silence selection (M)",
+		"deleteSelection": "Delete selection (Del)"
 	},
 	"updates": {
 		"title": "Обновления",

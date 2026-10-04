@@ -251,7 +251,13 @@
 		"systemLabel": "系统声音",
 		"micLabel": "麦克风",
 		"mixedLabel": "来源",
-		"deleteRegion": "删除音频"
+		"deleteRegion": "删除音频",
+		"mute": "Mute audio",
+		"fadeIn": "Fade in",
+		"fadeOut": "Fade out",
+		"selectionHint": "Hold Shift and drag over an audio track to select a range. M silences it; Delete removes it and closes the gap.",
+		"muteSelection": "Silence selection (M)",
+		"deleteSelection": "Delete selection (Del)"
 	},
 	"updates": {
 		"experimentalDescription": "你已选择接收实验性更新，因此可以在 Recordly 最新更新广泛发布之前选择先行测试。",

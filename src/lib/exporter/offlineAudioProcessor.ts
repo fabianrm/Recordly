@@ -1,4 +1,9 @@
+import { getAudioSourceOffsetMs } from "@/components/video-editor/audio/audioRegionEdit";
 import { SOURCE_AUDIO_NORMALIZE_GAIN } from "@/components/video-editor/audio/audioTypes";
+import {
+	hasVolumeEnvelope,
+	scheduleVolumeEnvelope,
+} from "@/components/video-editor/audio/volumeEnvelope";
 import type {
 	AudioRegion,
 	ClipRegion,
@@ -131,6 +136,7 @@ export class OfflineAudioProcessor extends AudioMediaProcessor {
 		const regionEntries: Array<{ buffer: AudioBuffer; region: AudioRegion }> = [];
 		for (const region of audioRegions) {
 			if (this.cancelled) throw new Error("Export cancelled");
+			if (region.muted) continue;
 			const buffer = await this.decodeAudioFromUrl(region.audioPath);
 			if (buffer) regionEntries.push({ buffer, region });
 		}
@@ -160,6 +166,15 @@ export class OfflineAudioProcessor extends AudioMediaProcessor {
 					sourceEndMs: getClipSourceEndMs(clip),
 					speed: clip.speed,
 					outputStartMs: clip.startMs,
+					...(hasVolumeEnvelope(clip)
+						? {
+								envelope: {
+									fadeInMs: clip.fadeInMs,
+									fadeOutMs: clip.fadeOutMs,
+									volumeKeyframes: clip.volumeKeyframes,
+								},
+							}
+						: {}),
 				}))
 			: this.buildTimelineSlices(sourceDurationMs, trimRegions, speedRegions);
 
@@ -397,9 +412,10 @@ export class OfflineAudioProcessor extends AudioMediaProcessor {
 		if (localEndSec <= 0 || localStartSec >= chunkDurationSec) return;
 
 		// Clip to chunk bounds
-		let bufferOffsetSec = 0;
+		const regionOffsetSec = getAudioSourceOffsetMs(region) / 1000;
+		let bufferOffsetSec = regionOffsetSec;
 		if (localStartSec < 0) {
-			bufferOffsetSec = -localStartSec;
+			bufferOffsetSec += -localStartSec;
 			localStartSec = 0;
 		}
 		if (localEndSec > chunkDurationSec) {
@@ -411,7 +427,16 @@ export class OfflineAudioProcessor extends AudioMediaProcessor {
 
 		const gainNode = ctx.createGain();
 		const normalizeGain = region.normalize ? SOURCE_AUDIO_NORMALIZE_GAIN : 1;
-		gainNode.gain.value = Math.max(0, Math.min(1, region.volume * normalizeGain));
+		const fromLocalMs = (chunkOutputStartSec + localStartSec) * 1000 - outputStartMs;
+		scheduleVolumeEnvelope({
+			param: gainNode.gain,
+			envelope: region,
+			durationMs: outputEndMs - outputStartMs,
+			baseGain: Math.max(0, Math.min(1, region.volume * normalizeGain)),
+			contextStartSec: localStartSec,
+			fromLocalMs,
+			toLocalMs: fromLocalMs + duration * 1000,
+		});
 		gainNode.connect(ctx.destination);
 
 		const source = ctx.createBufferSource();

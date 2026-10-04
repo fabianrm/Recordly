@@ -1,9 +1,12 @@
 import type { Span } from "dnd-timeline";
 import { type Dispatch, type MutableRefObject, type SetStateAction, useCallback } from "react";
+import { changeAudioSpan, planAudioSplit } from "../audio/audioRegionEdit";
+import type { VolumeEnvelope } from "../audio/volumeEnvelope";
 import type { AudioRegion, EditorEffectSection } from "../types";
 
 interface UseAudioRegionCommandsParams {
 	setSelectedClipId: Dispatch<SetStateAction<string | null>>;
+	audioRegions: AudioRegion[];
 	setAudioRegions: Dispatch<SetStateAction<AudioRegion[]>>;
 	selectedAudioId: string | null;
 	setSelectedAudioId: Dispatch<SetStateAction<string | null>>;
@@ -16,6 +19,7 @@ interface UseAudioRegionCommandsParams {
 
 export function useAudioRegionCommands({
 	setSelectedClipId,
+	audioRegions,
 	setAudioRegions,
 	selectedAudioId,
 	setSelectedAudioId,
@@ -88,9 +92,7 @@ export function useAudioRegionCommands({
 				current.map((region) =>
 					region.id === id
 						? {
-								...region,
-								startMs: Math.round(span.start),
-								endMs: Math.round(span.end),
+								...changeAudioSpan(region, span.start, span.end),
 								...(normalizedTrackIndex === undefined
 									? {}
 									: { trackIndex: normalizedTrackIndex }),
@@ -135,12 +137,77 @@ export function useAudioRegionCommands({
 		[selectedAudioId, setAudioRegions],
 	);
 
+	/** Split the selected audio region at a timeline position. Returns false if nothing was split. */
+	const handleAudioSplit = useCallback(
+		(splitMs: number) => {
+			const region = audioRegions.find((candidate) => candidate.id === selectedAudioId);
+			if (!region) return false;
+			const plan = planAudioSplit({
+				region,
+				splitMs,
+				createId: () => `audio-${nextAudioIdRef.current++}`,
+			});
+			if (!plan) return false;
+			setAudioRegions((current) =>
+				current.flatMap((candidate) =>
+					candidate.id === region.id ? [plan.left, plan.right] : [candidate],
+				),
+			);
+			setSelectedAudioId(plan.right.id);
+			return true;
+		},
+		[audioRegions, nextAudioIdRef, selectedAudioId, setAudioRegions, setSelectedAudioId],
+	);
+
+	const handleAudioMutedChange = useCallback(
+		(muted: boolean) => {
+			if (!selectedAudioId) return;
+			setAudioRegions((current) =>
+				current.map((region) => {
+					if (region.id !== selectedAudioId) return region;
+					const { muted: _muted, ...rest } = region;
+					return muted ? { ...rest, muted: true } : rest;
+				}),
+			);
+		},
+		[selectedAudioId, setAudioRegions],
+	);
+
+	const handleAudioEnvelopeChange = useCallback(
+		(patch: VolumeEnvelope) => {
+			if (!selectedAudioId) return;
+			setAudioRegions((current) =>
+				current.map((region) =>
+					region.id === selectedAudioId ? applyEnvelopePatch(region, patch) : region,
+				),
+			);
+		},
+		[selectedAudioId, setAudioRegions],
+	);
+
 	return {
 		handleSelectAudio,
+		handleAudioSplit,
+		handleAudioMutedChange,
+		handleAudioEnvelopeChange,
 		handleAudioAdded,
 		handleAudioSpanChange,
 		handleAudioVolumeChange,
 		handleAudioDelete,
 		handleAudioNormalizeChange,
 	};
+}
+
+/** Merge envelope fields, dropping ones that were cleared so saved projects stay minimal. */
+export function applyEnvelopePatch<T extends VolumeEnvelope>(target: T, patch: VolumeEnvelope): T {
+	const next = { ...target };
+	for (const key of ["fadeInMs", "fadeOutMs", "volumeKeyframes"] as const) {
+		if (!(key in patch)) continue;
+		const value = patch[key];
+		const isEmpty =
+			value === undefined || (Array.isArray(value) ? value.length === 0 : value <= 0);
+		if (isEmpty) delete next[key];
+		else (next as VolumeEnvelope)[key] = value as never;
+	}
+	return next;
 }

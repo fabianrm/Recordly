@@ -1,3 +1,4 @@
+import { normalizeVolumeEnvelope } from "./audio/volumeEnvelope";
 import { getLocalMediaServerPath } from "@/lib/localMediaUrl";
 import type { SourceAudioTrackSettings } from "@/components/video-editor/audio/audioTypes";
 import { DEFAULT_WALLPAPER_PATH } from "@/lib/wallpapers";
@@ -471,6 +472,7 @@ export function normalizeProjectEditor(editor: Partial<ProjectEditorState>): Pro
 							typeof region.showSourceAudio === "boolean"
 								? region.showSourceAudio
 								: false,
+						...normalizeVolumeEnvelope(region, endMs - startMs),
 					};
 				})
 		: [];
@@ -631,6 +633,11 @@ export function normalizeProjectEditor(editor: Partial<ProjectEditorState>): Pro
 						trackIndex: isFiniteNumber(region.trackIndex)
 							? Math.max(0, Math.floor(region.trackIndex))
 							: 0,
+						...(isFiniteNumber(region.sourceOffsetMs) && region.sourceOffsetMs > 0
+							? { sourceOffsetMs: Math.round(region.sourceOffsetMs) }
+							: {}),
+						...(region.muted === true ? { muted: true } : {}),
+						...normalizeVolumeEnvelope(region, endMs - startMs),
 					};
 				})
 		: [];
