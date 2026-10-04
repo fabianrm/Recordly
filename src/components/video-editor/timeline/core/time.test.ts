@@ -19,7 +19,7 @@ describe("timeline core/time", () => {
 		expect(calculateTimelineScale(0)).toEqual({
 			minItemDurationMs: 100,
 			defaultItemDurationMs: 1000,
-			minVisibleRangeMs: 300,
+			minVisibleRangeMs: 100,
 		});
 		expect(calculateTimelineScale(1).defaultItemDurationMs).toBe(100);
 		expect(calculateTimelineScale(100).defaultItemDurationMs).toBe(5000);

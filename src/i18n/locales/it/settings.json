@@ -264,5 +264,12 @@
 		"title": "Aggiornamenti",
 		"experimental": "Aggiornamenti sperimentali",
 		"saveFailed": "Impossibile cambiare il canale di aggiornamento."
+	},
+	"timelineZoom": {
+		"zoomIn": "Zoom in timeline",
+		"zoomOut": "Zoom out timeline",
+		"fit": "Show whole timeline",
+		"toSelection": "Zoom to selection",
+		"level": "Timeline zoom"
 	}
 }

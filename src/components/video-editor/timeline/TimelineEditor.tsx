@@ -26,6 +26,7 @@ import { calculateTimelineScale } from "./core/time";
 import type { ClipSequenceSpan } from "./core/timelineTypes";
 import { useTimelineAudioPeaks } from "./hooks/useTimelineAudioPeaks";
 import { useTimelineEditorRuntime } from "./hooks/useTimelineEditorRuntime";
+import { TimelineZoomControls } from "./components/viewport/TimelineZoomControls";
 import { useTimelineRange } from "./hooks/useTimelineRange";
 import {
 	buildSourceSidecarPathCandidates,
@@ -421,6 +422,13 @@ const TimelineEditor = forwardRef<TimelineEditorHandle, TimelineEditorProps>(
 
 		return (
 			<div className="flex-1 min-h-0 flex flex-col bg-transparent overflow-hidden">
+				<TimelineZoomControls
+					range={clampedRange}
+					setRange={setRange}
+					totalMs={totalMs}
+					minVisibleRangeMs={timelineScale.minVisibleRangeMs}
+					currentTimeMs={currentTimeMs}
+				/>
 				<div
 					ref={timelineContainerRef}
 					data-testid="timeline-scroll"

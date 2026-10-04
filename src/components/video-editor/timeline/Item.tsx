@@ -120,6 +120,31 @@ export default function Item({
 	const displaySpan = clipPresentation?.length
 		? getRegionDisplaySpan(span, clipPresentation)
 		: (suppliedDisplaySpan ?? span);
+	// The rendered block only covers the on-screen part of the item (dnd-timeline pads
+	// away what is scrolled off), so overlays must map time against that part.
+	const visibleMediaSpan = useMemo(() => {
+		const displayDuration = displaySpan.end - displaySpan.start;
+		const mediaDuration = span.end - span.start;
+		if (displayDuration <= 0) return span;
+		const toMedia = (displayMs: number) =>
+			span.start + ((displayMs - displaySpan.start) / displayDuration) * mediaDuration;
+		const start = Math.max(displaySpan.start, timeline.range.start);
+		const end = Math.min(displaySpan.end, timeline.range.end);
+		return end > start ? { start: toMedia(start), end: toMedia(end) } : span;
+	}, [displaySpan.end, displaySpan.start, span, timeline.range.end, timeline.range.start]);
+	// Draw only the on-screen slice of the waveform so zooming in reveals detail.
+	const visibleWaveformSegment = useMemo(() => {
+		const segment = waveformSegmentSpan ?? span;
+		const mediaDuration = span.end - span.start;
+		if (mediaDuration <= 0) return segment;
+		const segmentDuration = segment.end - segment.start;
+		const from = (visibleMediaSpan.start - span.start) / mediaDuration;
+		const to = (visibleMediaSpan.end - span.start) / mediaDuration;
+		return {
+			start: segment.start + from * segmentDuration,
+			end: segment.start + to * segmentDuration,
+		};
+	}, [span, visibleMediaSpan.end, visibleMediaSpan.start, waveformSegmentSpan]);
 	const nodeRef = useRef<HTMLDivElement | null>(null);
 	const targets = useMemo(
 		() => [
@@ -379,8 +404,8 @@ export default function Item({
 					{showAudioWaveform && waveformPeaks && (
 						<AudioWaveform
 							peaks={waveformPeaks}
-							segmentStartMs={waveformSegmentSpan?.start ?? span.start}
-							segmentEndMs={waveformSegmentSpan?.end ?? span.end}
+							segmentStartMs={visibleWaveformSegment.start}
+							segmentEndMs={visibleWaveformSegment.end}
 							gain={waveformGain}
 							normalize={waveformNormalize}
 							className="absolute inset-0 w-full h-full pointer-events-none opacity-45"
@@ -390,10 +415,17 @@ export default function Item({
 						<VolumeEnvelopeOverlay
 							envelope={volumeEnvelope ?? {}}
 							durationMs={span.end - span.start}
+							visibleLocalSpan={{
+								start: visibleMediaSpan.start - span.start,
+								end: visibleMediaSpan.end - span.start,
+							}}
 						/>
 					)}
 					{rangeSelectionHere && (
-						<AudioRangeHighlight selection={rangeSelectionHere} span={span} />
+						<AudioRangeHighlight
+							selection={rangeSelectionHere}
+							span={visibleMediaSpan}
+						/>
 					)}
 					{/* Muted overlay for source audio track items */}
 					{isAudio && muted && (

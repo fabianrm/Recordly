@@ -264,5 +264,12 @@
 		"title": "업데이트",
 		"experimental": "실험적 업데이트",
 		"saveFailed": "업데이트 채널을 변경하지 못했습니다."
+	},
+	"timelineZoom": {
+		"zoomIn": "Zoom in timeline",
+		"zoomOut": "Zoom out timeline",
+		"fit": "Show whole timeline",
+		"toSelection": "Zoom to selection",
+		"level": "Timeline zoom"
 	}
 }

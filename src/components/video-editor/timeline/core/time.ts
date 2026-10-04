@@ -59,7 +59,7 @@ export function calculateTimelineScale(durationSeconds: number): TimelineScaleCo
 			? Math.max(minItemDurationMs, Math.min(Math.round(totalMs * 0.05), 30000))
 			: Math.max(minItemDurationMs, 1000);
 
-	const minVisibleRangeMs = 300;
+	const minVisibleRangeMs = 100;
 
 	return {
 		minItemDurationMs,

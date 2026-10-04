@@ -122,6 +122,8 @@ import { MenuDotsVerticalIcon as MenuDotsVerticalLinear } from "@solar-icons/rea
 import { MenuDotsVerticalIcon as MenuDotsVerticalBold } from "@solar-icons/react/bold/menu-dots-vertical";
 import { MicrophoneIcon as MicrophoneLinear } from "@solar-icons/react/linear/microphone";
 import { MicrophoneIcon as MicrophoneBold } from "@solar-icons/react/bold/microphone";
+import { MagnifierZoomOutIcon as MagnifierZoomOutLinear } from "@solar-icons/react/linear/magnifier-zoom-out";
+import { MagnifierZoomOutIcon as MagnifierZoomOutBold } from "@solar-icons/react/bold/magnifier-zoom-out";
 import { MinusIcon as MinusLinear } from "@solar-icons/react/linear/minus";
 import { MinusIcon as MinusBold } from "@solar-icons/react/bold/minus";
 import { MonitorIcon as MonitorLinear } from "@solar-icons/react/linear/monitor";
@@ -244,6 +246,7 @@ export const ImageSquare = solar(GalleryLinear, GalleryBold);
 export const Info = solar(InfoCircleLinear, InfoCircleBold);
 export const MagnifyingGlass = solar(MagnifierLinear, MagnifierBold);
 export const MagnifyingGlassPlus = solar(MagnifierZoomInLinear, MagnifierZoomInBold);
+export const MagnifyingGlassMinus = solar(MagnifierZoomOutLinear, MagnifierZoomOutBold);
 export const MicrophoneIcon = solar(MicrophoneLinear, MicrophoneBold);
 export const MicrophoneSlashIcon = solar(MicrophoneLinear, MicrophoneBold, true);
 export const MinusIcon = solar(MinusLinear, MinusBold);

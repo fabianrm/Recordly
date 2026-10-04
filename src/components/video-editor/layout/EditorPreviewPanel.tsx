@@ -343,6 +343,8 @@ export function EditorPreviewPanel(props: Props) {
 				</div>
 
 				<div className="editor-playback-volume z-10 ml-auto flex items-center">
+					{/* The timeline renders its zoom controls here through a portal. */}
+					<div data-timeline-zoom-slot className="flex items-center" />
 					<Popover>
 						<PopoverTrigger asChild>
 							<Button

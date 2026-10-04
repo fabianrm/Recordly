@@ -264,5 +264,12 @@
 		"title": "更新",
 		"experimental": "实验性更新",
 		"saveFailed": "无法更改更新频道。"
+	},
+	"timelineZoom": {
+		"zoomIn": "Zoom in timeline",
+		"zoomOut": "Zoom out timeline",
+		"fit": "Show whole timeline",
+		"toSelection": "Zoom to selection",
+		"level": "Timeline zoom"
 	}
 }

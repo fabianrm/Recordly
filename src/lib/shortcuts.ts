@@ -39,6 +39,10 @@ export const FIXED_SHORTCUTS: FixedShortcut[] = [
 	},
 	{ label: "Pan Timeline", display: "Shift + Scroll", bindings: [] },
 	{ label: "Zoom Timeline", display: "Ctrl + Scroll", bindings: [] },
+	{ label: "Zoom In Timeline", display: "= / +", bindings: [{ key: "=" }, { key: "+" }] },
+	{ label: "Zoom Out Timeline", display: "-", bindings: [{ key: "-" }] },
+	{ label: "Show Whole Timeline", display: "0", bindings: [{ key: "0" }] },
+	{ label: "Zoom to Audio Selection", display: "E", bindings: [{ key: "e" }] },
 	{ label: "Select Audio Range", display: "Shift + Drag", bindings: [] },
 	{ label: "Silence Audio Selection", display: "M", bindings: [{ key: "m" }] },
 ];
